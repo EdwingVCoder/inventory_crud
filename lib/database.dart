@@ -41,18 +41,27 @@ class Database {
   }
 
   // Get Patrimony
-  Future<int> calculatePatrimony() async {
+  Future<List<int>> getReport() async {
     int patrimony = 0;
+    int totalSells = 0;
+    int estimatedProfits = 0;
 
     QuerySnapshot snapshot = await readDocuments().first;
 
     for (var document in snapshot.docs) {
       Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+      // Get Data
       int buyPrice = data['buyPrice'];
+      int sellPrice = data['sellPrice'];
       int stock = data['stock'];
+      // Add Patrimony
       patrimony += buyPrice * stock;
+      // Add Sells
+      totalSells += sellPrice * stock;
     }
 
-    return patrimony;
+    estimatedProfits = totalSells - patrimony;
+
+    return [patrimony, totalSells, estimatedProfits];
   }
 }

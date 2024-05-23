@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:inventory_crud/widgets.dart';
 import 'package:inventory_crud/database.dart';
+import 'package:inventory_crud/utility.dart';
 
 class DialogController {
   // Database Class
@@ -43,7 +44,7 @@ class DialogController {
               padding: const EdgeInsets.all(10),
               child: ListBody(
                 children: [
-                  TextInput(
+                  CodeInput(
                     controller: createCodeController,
                     hintText: 'Código',
                   ),
@@ -53,17 +54,17 @@ class DialogController {
                     hintText: 'Nombre',
                   ),
                   const SizedBox(height: 15),
-                  TextInput(
+                  MoneyInput(
                     controller: createBuyPriceController,
                     hintText: 'Precio Compra',
                   ),
                   const SizedBox(height: 15),
-                  TextInput(
+                  MoneyInput(
                     controller: createSellPriceController,
                     hintText: 'Precio Venta',
                   ),
                   const SizedBox(height: 15),
-                  TextInput(
+                  StockInput(
                     controller: createStockController,
                     hintText: 'Stock',
                   ),
@@ -109,8 +110,8 @@ class DialogController {
               padding: const EdgeInsets.all(10),
               child: ListBody(
                 children: [
-                  productData('Precio Compra', '\$$buyPrice COP'),
-                  productData('Precio Venta', '\$$sellPrice COP'),
+                  productData('Precio Compra', formatCurrencyCOP(buyPrice)),
+                  productData('Precio Venta', formatCurrencyCOP(sellPrice)),
                   productData('Stock', '$stock Unidades')
                 ],
               ),
@@ -160,20 +161,20 @@ class DialogController {
               padding: const EdgeInsets.all(10),
               child: ListBody(
                 children: [
-                  TextInput(
+                  CodeInput(
                       controller: updateCodeController, hintText: '#$code'),
                   const SizedBox(height: 15),
                   TextInput(controller: updateNameController, hintText: name),
                   const SizedBox(height: 15),
-                  TextInput(
+                  MoneyInput(
                       controller: updateBuyPriceController,
                       hintText: '\$$buyPrice COP'),
                   const SizedBox(height: 15),
-                  TextInput(
+                  MoneyInput(
                       controller: updateSellPriceController,
                       hintText: '\$$sellPrice COP'),
                   const SizedBox(height: 15),
-                  TextInput(
+                  StockInput(
                       controller: updateStockController,
                       hintText: '$stock Unidades'),
                 ],
@@ -189,6 +190,7 @@ class DialogController {
                   int stock = int.parse(updateStockController.text);
                   database.updateDocument(
                       docID, code, name, buyPrice, sellPrice, stock);
+                  Navigator.pop(context);
                   Navigator.pop(context);
                 },
                 child: const Text('Guardar'),
@@ -229,6 +231,7 @@ class DialogController {
                 onPressed: () {
                   database.deleteDocument(docID);
                   Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 child: const Text('Eliminar'),
               ),
@@ -245,7 +248,10 @@ class DialogController {
 
   // View Report
   void viewReportDialog(context) async {
-    int patrimony = await database.calculatePatrimony();
+    List<int> report = await database.getReport();
+    int patrimony = report[0];
+    int totalSells = report[1];
+    int estimatedProfits = report[2];
 
     await showDialog(
         context: context,
@@ -256,14 +262,15 @@ class DialogController {
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             content: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              child: Center(
-                child: Text(
-                  '\$$patrimony COP',
-                  style: const TextStyle(fontWeight: FontWeight.w400),
-                ),
-              ),
-            ),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                child: ListBody(
+                  children: [
+                    productData('Patrimonio', formatCurrencyCOP(patrimony)),
+                    productData('Total Ventas', formatCurrencyCOP(totalSells)),
+                    productData('Ganancias esperadas',
+                        formatCurrencyCOP(estimatedProfits))
+                  ],
+                )),
             actions: [
               TextButton(
                   onPressed: () {
